@@ -1,0 +1,29 @@
+#Dockerfile.backend
+# Usa una imagen base de Python
+FROM python:3.11-slim-bookworm
+
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Instala las dependencias del sistema necesarias para mysqlclient
+# (libmysqlclient-dev y gcc son comunes)
+RUN apt-get update && apt-get install -y \
+    default-libmysqlclient-dev \
+    gcc \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia los archivos de requerimientos e instala las dependencias de Python
+COPY requirements.txt .
+# Asegúrate de que requirements.txt incluya 'mysqlclient' o 'pymysql'
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia el resto del código de la aplicación Django
+COPY . .
+
+# Expone el puerto predeterminado de Django
+EXPOSE 8000
+
+# Comando para aplicar las migraciones de la base de datos
+# Y luego iniciar el servidor de desarrollo de Django
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

@@ -1,0 +1,19 @@
+#Dockerfile.frontend
+# Usa una imagen base de Node.js
+FROM node:20-slim
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copia los archivos de definición de dependencias y los instala
+COPY package*.json ./
+RUN npm install
+
+# Copia el resto del código de la aplicación
+COPY . .
+
+# Expone el puerto que Vite usa por defecto
+EXPOSE 5173
+
+# Comando para iniciar la aplicación en modo desarrollo
+CMD ["npm", "run", "dev", "--", "--host"] 
+# --host es crucial para acceder desde fuera del contenedor

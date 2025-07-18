@@ -1,0 +1,55 @@
+services:
+  frontend:
+    build:
+      context: ./frontend # Ruta a la carpeta de tu aplicación React Vite
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173" # Puerto de desarrollo de Vite
+    volumes:
+      - ./frontend:/app # Monta el código fuente para hot-reloading
+      - /app/node_modules # Evita que node_modules se monte desde el host
+    environment:
+      # Asegúrate de que tu app React sepa dónde encontrar el backend
+      # Usa el nombre del servicio 'backend' para la comunicación entre contenedores
+      - VITE_API_URL=http://backend:8000/api # ¡Importante! Usa el nombre del servicio
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backendPos # Ruta a la carpeta de tu aplicación Django
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000" # Puerto predeterminado de Django
+    volumes:
+      - ./backendPos:/app # Monta el código fuente para desarrollo
+    environment:
+      # Variables de entorno para la conexión a MySQL
+      # Usa el nombre del servicio 'db' para la comunicación con la base de datos
+      - DATABASE_URL=mysql://admin:1234@db:3306/dbPos # Ajusta user, password, mydatabase
+      - DEBUG=True # Para desarrollo. ¡Cámbialo en producción!
+      - SECRET_KEY=your_insecure_development_secret_key # ¡Cambia esto en producción!
+    depends_on:
+      - db
+    # Comando para esperar a que la base de datos esté lista antes de iniciar el backend.
+    # Necesitarás instalar 'wait-for-it.sh' o similar en tu Dockerfile.backend o usar un script de entrada.
+    # Si no, las migraciones podrían fallar si la DB no está lista.
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  db:
+    image: mysql:8.0 # Usa una imagen de MySQL. Puedes especificar otra versión si lo prefieres.
+    environment:
+      - MYSQL_DATABASE=dbPos # Nombre de la base de datos que se creará
+      - MYSQL_USER=admin # Usuario de la base de datos
+      - MYSQL_PASSWORD=1234 # Contraseña para el usuario de la base de datos
+      - MYSQL_ROOT_PASSWORD=1234 # Contraseña para el usuario root de MySQL (importante para el setup inicial)
+    volumes:
+      - db_data:/var/lib/mysql # Persiste los datos de la base de datos
+    ports:
+      - "3307:3306" # Opcional: expone el puerto de MySQL si necesitas accederlo desde fuera del contenedor
+
+volumes:
+  db_data: # Define un volumen para los datos de la base de datos
