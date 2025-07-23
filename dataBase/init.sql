@@ -1,11 +1,14 @@
--- Elimina la base de datos si ya existe para una instalación limpia (opcional)
-DROP DATABASE IF EXISTS dbPos;
-
 -- Crea la nueva base de datos
-CREATE DATABASE dbPos;
+CREATE DATABASE IF NOT EXISTS dbPos;
 
--- Selecciona la base de datos para usarla
-USE dbPos;
+CREATE USER 'admin'@'%' IDENTIFIED BY '1234';
+
+-- CORREGIDO: Otorga privilegios en la base de datos correcta (dbPos)
+-- El nombre debe coincidir con la variable MYSQL_DATABASE o el que crees aquí.
+GRANT ALL PRIVILEGES ON dbPos.* TO 'admin'@'%';
+
+-- Aplica los cambios
+FLUSH PRIVILEGES;
 
 -- #####################################################################
 -- # SECCIÓN 1: GESTIÓN DE LICENCIAS, USUARIOS Y ROLES                 #

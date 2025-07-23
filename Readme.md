@@ -105,8 +105,8 @@ Para levantar el proyecto en tu entorno local, sigue los siguientes pasos:
 1.  **Clonar el Repositorio:**
 
     ```bash
-    git clone [URL-DEL-REPOSITORIO]
-    cd [nombre-del-repositorio]
+    git clone https://github.com/JEX2009/POSSystem.git
+    cd POSSystem
     ```
 
 2.  **Configurar Variables de Entorno:**
@@ -143,6 +143,7 @@ Para levantar el proyecto en tu entorno local, sigue los siguientes pasos:
   * **Auditoría:** Para acciones críticas (anulación de facturas, eliminación de productos), implementar un sistema que registre `quién`, `qué`, `cuándo` y `por qué`.
   * **Contabilidad:** Para funcionalidades complejas como la prorrata, se recomienda la consulta con un experto contable para asegurar la conformidad legal y funcional.
 
+  * **Errores** Si el contenedor backend no levanta revisa que el entrypoint no este en CRLF
 ## 🤝 **Contribución**
 
 ¡Las contribuciones son bienvenidas\! Si deseas aportar al proyecto, por favor, sigue el flujo estándar:
