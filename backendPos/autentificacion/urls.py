@@ -10,33 +10,34 @@ router = routers.DefaultRouter()
 # El router se encarga de generar las URLs para cada acción (list, create, retrieve, etc.)
 
 # SECCIÓN 1: Usuarios y Roles
-router.register(r'roles', v.RolViewSet, 'roles')
-router.register(r'usuarios', v.UsuarioViewSet, 'usuarios')
+router.register(r'roles', v.RolViewSet, 'rol')
+router.register(r'usuarios', v.UsuarioViewSet, 'usuario')
 
 # SECCIÓN 2: Inventario
-router.register(r'categorias-productos', v.CategoriaProductoViewSet, 'categorias-productos')
-router.register(r'productos', v.ProductoViewSet, 'productos')
-router.register(r'salones', v.SalonViewSet, 'salones')
-router.register(r'mesas', v.MesaViewSet, 'mesas')
+router.register(r'categorias-productos', v.CategoriaProductoViewSet, 'categoriaproducto')
+router.register(r'productos', v.ProductoViewSet, 'producto')
+router.register(r'salones', v.SalonViewSet, 'salon')
+router.register(r'mesas', v.MesaViewSet, 'mesa')
 
 # SECCIÓN 3: Órdenes y Clientes
-router.register(r'clientes', v.ClienteViewSet, 'clientes')
-router.register(r'ordenes', v.OrdenViewSet, 'ordenes')
-# Nota: DetalleOrdenViewSet está comentado en tus vistas, así que no lo registro.
+router.register(r'clientes', v.ClienteViewSet, 'cliente')
+router.register(r'ordenes', v.OrdenViewSet, 'orden')
+# CAMBIO: Se registra el ViewSet para DetalleOrden
+router.register(r'detalles-orden', v.DetalleOrdenViewSet, 'detalleorden')
 
 # SECCIÓN 4: Ventas y Pagos
-router.register(r'ventas', v.VentaViewSet, 'ventas')
-router.register(r'pagos-venta', v.PagoVentaViewSet, 'pagos-venta')
-router.register(r'registros-anulacion', v.RegistroAnulacionViewSet, 'registros-anulacion')
+router.register(r'ventas', v.VentaViewSet, 'venta')
+router.register(r'pagos-venta', v.PagoVentaViewSet, 'pagoventa')
+router.register(r'registros-anulacion', v.RegistroAnulacionViewSet, 'registroanulacion')
 
 # SECCIÓN 5: Caja
-router.register(r'sesiones-caja', v.SesionCajaViewSet, 'sesiones-caja')
-router.register(r'movimientos-caja', v.MovimientoCajaViewSet, 'movimientos-caja')
+router.register(r'sesiones-caja', v.SesionCajaViewSet, 'sesioncaja')
+router.register(r'movimientos-caja', v.MovimientoCajaViewSet, 'movimientocaja')
 
 
 # 3. Se definen los urlpatterns de la API.
-# Solo necesitamos incluir las URLs del router bajo un prefijo, como 'api/'.
-# Django se encargará del resto.
+# Solo necesitamos incluir las URLs del router.
+# El prefijo 'api/' se puede añadir en el urls.py principal del proyecto.
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]

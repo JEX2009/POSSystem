@@ -1,144 +1,174 @@
-# myapi/serializers.py
-
 from rest_framework import serializers
-# Asumimos que tus modelos están en un archivo 'models.py' en la misma app
+# CAMBIO: Se importan los nombres de modelos en singular para que coincidan con models.py
 from .models import (
-    Roles, Usuarios, CategoriasProductos, Productos, Salones, Mesas, Clientes,
-    Ordenes, Ventas, PagosVenta, RegistrosAnulacion,
-    SesionesCaja, MovimientosCaja
+    Rol, Usuario, CategoriaProducto, Producto, Salon, Mesa, Cliente,
+    Orden, DetalleOrden, Venta, PagoVenta, RegistroAnulacion,
+    SesionCaja, MovimientoCaja
 )
 
-class RolesSerializer(serializers.ModelSerializer):
-    """ Serializer para el modelo Roles. """
+# #####################################################################
+# # SECCIÓN 1: GESTIÓN DE USUARIOS Y ROLES
+# #####################################################################
+
+class RolSerializer(serializers.ModelSerializer):
+    """ Serializer para el modelo Rol. """
     class Meta:
-        model = Roles
+        # CAMBIO: Modelo actualizado a singular
+        model = Rol
         fields = '__all__'
 
 class UsuarioSerializer(serializers.ModelSerializer):
     """
     Serializer para el modelo Usuario.
-    Muestra el nombre del Roles en lugar de solo su ID para mayor claridad.
+    Muestra el nombre del rol en lugar de solo su ID para mayor claridad.
     """
-    # Para mostrar el objeto completo del Roles en lugar de solo el ID.
-    # Si solo quieres el ID, puedes quitar esta línea.
-    Roles = RolesSerializer(read_only=True)
-    # Campo extra para aceptar el ID del Roles al crear/actualizar un usuario.
-    id_Roles = serializers.IntegerField(write_only=True)
+    # CAMBIO: Nombre de campo y serializer actualizados a singular
+    rol = RolSerializer(read_only=True)
+    # CAMBIO: Campo de solo escritura para recibir el ID del rol
+    rol_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = Usuarios
-        # Excluimos el hash de la contraseña por seguridad en las respuestas GET.
-        fields = ['id', 'nombre_usuario', 'nombre_completo', 'Roles', 'id_Roles', 'activo', 'fecha_creacion']
+        # CAMBIO: Modelo actualizado a singular
+        model = Usuario
+        fields = [
+            'id', 'nombre_usuario', 'nombre_completo', 'rol', 'rol_id',
+            'activo', 'fecha_creacion', 'hash_contrasena'
+        ]
+        # Esta parte asegura que el campo solo sea para escribir, no para leer.
         extra_kwargs = {
-            'hash_contrasena': {'write_only': True} # Solo para escritura (crear/actualizar)
+            'hash_contrasena': {'write_only': True}
         }
 
+# #####################################################################
+# # SECCIÓN 2: INVENTARIO, PRODUCTOS, MESAS Y SALONES
+# #####################################################################
 
-class CategoriasProductosSerializer(serializers.ModelSerializer):
+class CategoriaProductoSerializer(serializers.ModelSerializer):
     """ Serializer para las categorías de productos. """
     class Meta:
-        model = CategoriasProductos
+        # CAMBIO: Modelo actualizado a singular
+        model = CategoriaProducto
         fields = '__all__'
 
 class ProductoSerializer(serializers.ModelSerializer):
     """
-    Serializer para el modelo Productos.
+    Serializer para el modelo Producto.
     Muestra el nombre de la categoría.
     """
-    categoria = CategoriasProductosSerializer(read_only=True)
-    id_categoria = serializers.IntegerField(write_only=True)
+    # CAMBIO: Serializer de categoría actualizado
+    categoria = CategoriaProductoSerializer(read_only=True)
+    # CAMBIO: Campo de solo escritura para el ID de la categoría
+    categoria_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = Productos
+        # CAMBIO: Modelo actualizado a singular
+        model = Producto
+        # CAMBIO: Nombres de campos actualizados y corregido el typo 'contRolesa_stock'
         fields = [
-            'id', 'nombre', 'codigo_cabys', 'categoria', 'id_categoria', 'costo',
-            'precio_base', 'porcentaje_iva', 'stock_actual', 'contRolesa_stock'
+            'id', 'nombre', 'codigo_cabys', 'categoria', 'categoria_id', 'costo',
+            'precio_base', 'porcentaje_iva', 'stock_actual', 'controla_stock'
         ]
 
 class SalonSerializer(serializers.ModelSerializer):
     """ Serializer para los salones. """
     class Meta:
-        model = Salones
+        # CAMBIO: Modelo actualizado a singular
+        model = Salon
         fields = '__all__'
 
-class MesasSerializer(serializers.ModelSerializer):
+class MesaSerializer(serializers.ModelSerializer):
     """
-    Serializer para las Mesass.
+    Serializer para las mesas.
     Muestra el nombre del salón al que pertenece.
     """
     salon = SalonSerializer(read_only=True)
-    id_salon = serializers.IntegerField(write_only=True)
+    # CAMBIO: Campo de solo escritura para el ID del salón
+    salon_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = Mesas
-        fields = ['id', 'nombre', 'salon', 'id_salon', 'posicion_x', 'posicion_y', 'rotacion', 'estado']
+        # CAMBIO: Modelo actualizado a singular
+        model = Mesa
+        fields = ['id', 'nombre', 'salon', 'salon_id', 'posicion_x', 'posicion_y', 'rotacion', 'estado']
 
-class ClientesSerializer(serializers.ModelSerializer):
-    """ Serializer para los Clientess. """
+# #####################################################################
+# # SECCIÓN 3: FACTURACIÓN, ÓRDENES Y CLIENTES
+# #####################################################################
+
+class ClienteSerializer(serializers.ModelSerializer):
+    """ Serializer para los clientes. """
     class Meta:
-        model = Clientes
+        # CAMBIO: Modelo actualizado a singular
+        model = Cliente
         fields = '__all__'
 
-# class DetallesOrdenesSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer para los detalles de una Ordenes.
-#     Muestra la información completa del Productos.
-#     """
-#     Productos = ProductoSerializer(read_only=True)
-#     id_producto = serializers.IntegerField(write_only=True)
-
-#     class Meta:
-#         model = DetallesOrdenes
-#         fields = [
-#             'id', 'id_Ordenes', 'Productos', 'id_producto', 'cantidad',
-#             'precio_unitario_base', 'porcentaje_iva_aplicado', 'comentarios'
-#         ]
-
-class OrdenesSerializer(serializers.ModelSerializer):
+class DetalleOrdenSerializer(serializers.ModelSerializer):
     """
-    Serializer para las órdenes.
-    Incluye los detalles de la Ordenes (los productos) de forma anidada.
+    Serializer para los detalles de una orden.
+    Muestra la información completa del producto.
     """
-    # Muestra todos los detalles asociados a esta Ordenes
-    # detalles = DetallesOrdenesSerializer(many=True, read_only=True)
-    # Muestra la información de la Mesas, usuario y Clientes
-    Mesas = MesasSerializer(read_only=True)
-    usuario_creador = UsuarioSerializer(read_only=True)
-    Clientes = ClientesSerializer(read_only=True)
-
-    # Campos de solo escritura para recibir los IDs al crear/actualizar
-    id_Mesas = serializers.IntegerField(write_only=True, required=False, allow_null=True)
-    id_usuario_creador = serializers.IntegerField(write_only=True)
-    id_Clientes = serializers.IntegerField(write_only=True, required=False, allow_null=True)
-
+    # CAMBIO: Nombre de campo y serializer actualizados
+    producto = ProductoSerializer(read_only=True)
+    producto_id = serializers.IntegerField(write_only=True)
 
     class Meta:
-        model = Ordenes
+        # CAMBIO: Modelo actualizado a singular
+        model = DetalleOrden
+        # CAMBIO: Nombres de campos actualizados
         fields = [
-            'id', 'Mesas', 'usuario_creador', 'Clientes', 'tipo', 'estado',
-            'fecha_apertura', 'detalles', 'id_Mesas', 'id_usuario_creador', 'id_Clientes'
+            'id', 'orden', 'producto', 'producto_id', 'cantidad',
+            'precio_unitario_base', 'porcentaje_iva_aplicado', 'comentarios'
         ]
 
+class OrdenSerializer(serializers.ModelSerializer):
+    """
+    Serializer para las órdenes.
+    Incluye los detalles de la orden (los productos) de forma anidada.
+    """
+    # CAMBIO: Nombres de campos y serializers actualizados
+    detalles = DetalleOrdenSerializer(many=True, read_only=True)
+    mesa = MesaSerializer(read_only=True)
+    usuario_creador = UsuarioSerializer(read_only=True)
+    cliente = ClienteSerializer(read_only=True)
 
+    # CAMBIO: Campos de solo escritura para recibir los IDs
+    mesa_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    usuario_creador_id = serializers.IntegerField(write_only=True)
+    cliente_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
-class PagosVentaSerializer(serializers.ModelSerializer):
+    class Meta:
+        # CAMBIO: Modelo actualizado a singular
+        model = Orden
+        # CAMBIO: Nombres de campos actualizados
+        fields = [
+            'id', 'mesa', 'usuario_creador', 'cliente', 'tipo', 'estado',
+            'fecha_apertura', 'detalles', 'mesa_id', 'usuario_creador_id', 'cliente_id'
+        ]
+
+# #####################################################################
+# # SECCIÓN 4: VENTAS Y PAGOS
+# #####################################################################
+
+class PagoVentaSerializer(serializers.ModelSerializer):
     """ Serializer para los pagos de una venta. """
     class Meta:
-        model = PagosVenta
+        # CAMBIO: Modelo actualizado a singular
+        model = PagoVenta
         fields = '__all__'
 
 class VentaSerializer(serializers.ModelSerializer):
     """
     Serializer para las ventas.
-    Incluye los pagos y la información de la Ordenes.
+    Incluye los pagos y la información de la orden.
     """
-    pagos = PagosVentaSerializer(many=True, read_only=True)
-    Ordenes = OrdenesSerializer(read_only=True)
-    Clientes = ClientesSerializer(read_only=True)
+    pagos = PagoVentaSerializer(many=True, read_only=True)
+    # CAMBIO: Nombres de campos y serializers actualizados
+    orden = OrdenSerializer(read_only=True)
+    cliente = ClienteSerializer(read_only=True)
     usuario_vendedor = UsuarioSerializer(read_only=True)
 
     class Meta:
-        model = Ventas
+        # CAMBIO: Modelo actualizado a singular
+        model = Venta
         fields = '__all__'
 
 class RegistroAnulacionSerializer(serializers.ModelSerializer):
@@ -147,16 +177,21 @@ class RegistroAnulacionSerializer(serializers.ModelSerializer):
     usuario_autoriza = UsuarioSerializer(read_only=True)
 
     class Meta:
-        model = RegistrosAnulacion
+        # CAMBIO: Modelo actualizado a singular
+        model = RegistroAnulacion
         fields = '__all__'
 
+# #####################################################################
+# # SECCIÓN 5: GESTIÓN DE CAJA
+# #####################################################################
 
-class MovimientosCajaSerializer(serializers.ModelSerializer):
+class MovimientoCajaSerializer(serializers.ModelSerializer):
     """ Serializer para los movimientos de caja (entradas/salidas). """
     usuario = UsuarioSerializer(read_only=True)
 
     class Meta:
-        model = MovimientosCaja
+        # CAMBIO: Modelo actualizado a singular
+        model = MovimientoCaja
         fields = '__all__'
 
 class SesionCajaSerializer(serializers.ModelSerializer):
@@ -164,10 +199,11 @@ class SesionCajaSerializer(serializers.ModelSerializer):
     Serializer para las sesiones de caja.
     Incluye todos los movimientos de caja asociados.
     """
-    movimientos = MovimientosCajaSerializer(many=True, read_only=True)
+    movimientos = MovimientoCajaSerializer(many=True, read_only=True)
     usuario_apertura = UsuarioSerializer(read_only=True)
     usuario_cierre = UsuarioSerializer(read_only=True)
 
     class Meta:
-        model = SesionesCaja
+        # CAMBIO: Modelo actualizado a singular
+        model = SesionCaja
         fields = '__all__'

@@ -88,7 +88,7 @@ DATABASES = {
         'NAME': 'dbPos',
         'USER': 'root',
         'PASSWORD': '1234',
-        'HOST': 'localhost', # El nombre del servicio de la base de datos en docker-compose
+        'HOST': 'db', # El nombre del servicio de la base de datos en docker-compose
         'PORT': '3306',
     }
 }
