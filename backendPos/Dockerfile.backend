@@ -21,8 +21,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el resto del código de la aplicación Django
 COPY . .
 
-# Expone el puerto predeterminado de Django
-EXPOSE 8000
+# Copia el script de entrada y dale permisos de ejecución
+COPY ./entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Comando para aplicar las migraciones de la base de datos
 # Y luego iniciar el servidor de desarrollo de Django
