@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from .serializer import (
     RolSerializer, UsuarioSerializer, CategoriaProductoSerializer,
@@ -13,6 +14,7 @@ from .models import (
     Orden, DetalleOrden, Venta, PagoVenta, RegistroAnulacion,
     SesionCaja, MovimientoCaja
 )
+
 
 # #####################################################################
 # # VISTAS PARA LA API
@@ -33,15 +35,21 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Sobrescribe el método POST para hashear la contraseña al crear un usuario.
+        Crea un usuario de Django y luego el perfil Usuario enlazado.
         """
-        # Obtiene los datos de la petición
-        data = request.data.copy() # Usamos .copy() para poder modificar los datos
-        
-        # Hashea la contraseña antes de guardarla
-        data['hash_contrasena'] = make_password(data['hash_contrasena'])
-        
-        # Creamos un nuevo serializador con los datos modificados
+        data = request.data.copy()
+        # Crear el usuario de Django
+        username = data.get('nombre_usuario')
+        password = data.get('password')
+        nombre_completo = data.get('nombre_completo')
+        if not username or not password:
+            return Response({'error': 'nombre_usuario y password son requeridos.'}, status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.create(
+            username=username,
+            password=make_password(password),
+            first_name=nombre_completo
+        )
+        data['user_id'] = user.id
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -50,19 +58,15 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """
-        Sobrescribe los métodos PUT y PATCH para hashear la contraseña si se está actualizando.
+        Permite actualizar el perfil Usuario y la contraseña del usuario de Django si se envía.
         """
-        # Obtiene el objeto de usuario que se va a actualizar
         instance = self.get_object()
-        # Obtiene los datos de la petición
         data = request.data.copy()
-        
-        # Verifica si el campo 'hash_contrasena' viene en la petición
-        if 'hash_contrasena' in data:
-            # Si viene, la hashea
-            data['hash_contrasena'] = make_password(data['hash_contrasena'])
-        
-        # Procede con la actualización normal
+        # Actualiza la contraseña si viene en la petición
+        password = data.get('password')
+        if password:
+            instance.user.password = make_password(password)
+            instance.user.save()
         serializer = self.get_serializer(instance, data=data, partial=kwargs.get('partial', False))
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
