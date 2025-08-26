@@ -1,0 +1,93 @@
+1. Registro de licencia
+2. Loggin
+3. Dashborad de inicio
+    3.1 Acceso rapido donde se pueden poner secciones por eleccion del usuario
+    3.2 Filtro de ventas (Hoy, Semana, Mes) 
+    3.3 Filtro de ventas (Vendedor, Fecha de inicio, Fecha de fin)
+        3.3.1 Cantidad de ordenes hechas
+        3.3.2  Estadisticas (Total de dinero)
+        3.3.3  Estadisticas (Mejor vendedor)
+        3.3.4  Estadisticas (Mejores productos)
+        3.3.5  Estadisticas (Cantidad de productos)
+4. Menu facturar (Menu deplegable)
+    4.1 ventana desplegable de categorias
+        4.1.1 Mostrar productos en las categorias
+    4.2 Barra de busqueda mostrar productos similares a los que aparece
+    4.3 Apartado de productos 
+        4.3.1 Muestra un cuadro de agregar productos
+        4.3.2 Muestra un cuadro de los productos en bd
+            4.3.2.1 El cuadro tiene nombre, cantidad, Costo
+            4.3.2.2 Al tocar un cuadro este se agrega a la tabla del 4.5
+    4.4 Apartado de mesas
+        4.2.1 Capacidad de tener varios salones
+        4.2.2 Capacidad de editar productos en mesas 
+        4.2.3 Capacidad de mostrar mesas ocupadas
+        4.2.4 Capacidad de cambiar una orden de mesas
+        4.2.5 Capacidad de eliminar una orden
+            4.2.5.1 esta debe de dejar un registro 
+        4.2.6 Las mesas se muestran de forma visual 
+        4.2.7 Al tocar la mesa se abren los productos del punto 4.5
+    4.5 Tabla para mostrar productos
+        4.5.1 Al hacer el punto 4.2.7 los productos dentro de este se muestran 
+        4.5.2 Al hacer el punto 4.3.2.2 el producto se agrega
+        4.5.3 Al tener productos y clickar una mesa este se debe de transferir
+        4.5.4 Al tener un producto se debe tener cantidad, precio unitario sin iva, precio unitario con iva (Si cambia uno cambia el otro), precio total (cantidad * precio con iva), todos se puede modificar excepto total
+        4.5.5 Se deben poder agregar comentarios 
+        4.5.6 Se deben poder eliminar productos
+        4.5.7 Se debe de poder buscar clientes guardados anteriormente por cedula 
+        4.5.8 Se debe de poder agregar clientes (Identificacion, Tipo, Nombre(Si tipo es fisico se pone automatico), email, lugar de recidencia(opcional), numero(opcional))
+    4.6 Apartado de llevar (Mostrar y poder eliminar)
+    4.7 Barra de funciones 
+        4.7.1 Si estas en el apartado de productos un boton que te dirija a apartado mesa
+        4.7.2 Si estas en mesa o para llevar el boton permitira facturar
+            4.7.2.1 Mostrar 1 pop up
+                4.7.2.1.1 primero te da la posibilidad de dividir cuentas y dar la posible factura electronica
+                   4.7.2.1.1.1 Da 2 columnas una con todos los productos y la otra que despues de dar un click se muestre y se facture esta
+                4.7.2.1.2 un select donde si hay un cliente seleccionado sea por defecto factura electronica en caso contrario es tiquete electronico
+                4.7.2.1.3 te da la opcion de elegir si tarjeta, efectivo o sinpe o elegir mas de uno 
+                    4.7.2.1.3.1 Si es tarjeta o sinpe no se puede poner mas del total 
+                    4.7.2.1.3.2 Si es en efectivo se da la posibilidad de poner la cantidad de dinero que te den
+                        4.7.2.1.3.2.1 Se ponen numeros por defecto de 1, 2, 5, 10,20,30,40,50
+                    4.7.2.1.3.3 Se muestra un apartado de cuanto cambio hay que dar
+                4.7.2.1.4 al dar en facturar se muestra la cantidad que se recibe y el vuelto que se debe dar sin importar que sea 0 y que de cancelar o pagar
+                    4.7.2.1.4.1 Al pagar se hace una referencia de esto en un apartado mas adelante
+        4.7.3 Tercer boton que genere un 4.6
+        4.7.4 Se tiene un boton de caja 
+            4.7.4.1 Se tiene un boton de abrir y cerrar caja
+                4.7.4.1.1 Se tiene un resumen de entradas en efectivo, tarjeta o sinpe, y el total hecho en el dia
+                4.7.4.1.2 Se tiene otro apartado con los puntos: apertura de caja , salidas, total del resumen 4.7.4.1.1
+                4.7.4.1.3 Se tiene 2 input de poner cuanto efectivo hay en caja y el otro de efectivo para la siguiente
+                4.7.4.1.4 Se muestra una diferencia entre el punto 4.7.4.1.2 y el  4.7.4.1.3
+                4.7.4.1.5 Se da un espacio para poner observaciones
+            4.7.5.2 Se tiene un boton para generar salidas 
+                4.7.5.1 se pone un input de cantidad y otro de notas 
+
+5. ventas
+    5.1 Historico de ventas
+        5.1.1 Se muestra un barra para buscar
+        5.1.2 Se muestran botones para filtrar por fechas 
+        5.1.3 Al facturar se muestran inmediatamente aca  con todos los productos llevados con opciones para imprimir y anular esto dejando registro
+    5.2 Historial de movimientos de caja
+        5.1.1 Se muestra un barra para buscar
+        5.1.2 Se muestran botones para filtrar por fechas 
+        5.1.3 Al crear una salida se muestran inmediatamente aca con la cantidad y descripcion con opciones para imprimir y anular 
+6. Reservar una mesa
+    6.1 Al tener una fecha y una mesa esta se pone roja unos 30 minutos antes 
+7. Compras
+    7.1 Al recibir una factura electronica al correo esta se agrega a este punto (Idealmente pasarlo a alguna IA para que busque productos, el nombre del lugar a comprar, el total, fecha )
+    7.2 Se puede subir una foto de la factura fisica y esta se mostrara en el apartado
+8. Inventario
+    8.1 Crear producto
+        8.1.1 Listado de categorias de forma desplegable y sus productos
+            8.1.1.1 en estos listados se puede eliminar, modificar (Se usa el mismo menu que el 8.1.2), ver costo y precio
+        8.1.2 tener un boton de de agregar productos 
+            8.1.2.1 Nombre del producto, codigo cabys (por defecto 6331000000000), categoria, costo, impuesto (impuesto de valor agregado y 13.00% - tarifa general, precio, cantidad en stock )
+        8.1.3 Un bton que de un pop up para agregar categorias
+            8.2.2.1 Nombre de la categoria
+9.  Prorrata
+    9.1 Se debe de investigar mas para verlo
+10. Generar un menu qr
+    10.1 se debe de generar un qr que de un menu virtual ojala en pdf
+11. Mesas y salones 
+    11.1 Se puede agregar salones a los cuales se le pueden agregar las mesas
+        11.2 Se agregan diferentes figuras por drag and drop, Se pueden poner nombre y se le puede rotar(Ojala con flechas)

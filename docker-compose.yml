@@ -1,0 +1,43 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: dbPos
+    volumes:
+      - pos_db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=dbPos
+      - MYSQL_USER=userPos
+      - MYSQL_PASSWORD=1234
+    ports:
+      - "3307:3306"
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: posBackend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=dbPos
+      - DB_USER=userPos
+      - DB_PASSWORD=1234
+      - DB_HOST=db
+      - DB_PORT=3306
+    depends_on:
+      - db
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+
+
+
+volumes:
+  pos_db_data:
+
+
+# Nota: Asegúrate de que los nombres de los servicios y las variables de entorno coincidan con tu configuración real.

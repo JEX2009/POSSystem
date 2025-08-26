@@ -1,0 +1,5 @@
+Django==4.2.10 # Versión de Django
+mysqlclient # O pymysql, si lo prefieres
+django-cors-headers # Para manejar CORS
+djangorestframework # Para crear APIs RESTful
+python-dotenv # Para manejar variables de entorno
