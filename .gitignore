@@ -1,0 +1,92 @@
+# ====================================
+# Archivos y carpetas comunes a ignorar
+# ====================================
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos temporales
+*.tmp
+*.swp
+*.swo
+*.bak
+*.old
+*.orig
+
+# Archivos de dependencias
+node_modules/
+vendor/
+
+# Archivos de entornos virtuales (Python)
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de compilación (Java, C, C++)
+*.class
+*.o
+*.so
+*.dll
+*.exe
+*.out
+*.obj
+*.jar
+*.war
+*.ear
+target/
+build/
+dist/
+bin/
+.gradle/
+.mvn/
+
+# IDEs y editores
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# Archivos de configuración local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de paquetes
+*.tar.gz
+*.tgz
+*.zip
+
+# Cobertura de pruebas
+coverage/
+*.lcov
+
+# Archivos de base de datos locales
+*.sqlite3
+*.db
+
+# Documentos temporales
+~$*
+*.tmp
+*.temp
+
+# ====================================
+# Fin del .gitignore genérico
+# ====================================

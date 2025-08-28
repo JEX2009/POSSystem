@@ -135,3 +135,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración del Modelo de Usuario Personalizado
 AUTH_USER_MODEL = 'core.Worker'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173", # La dirección de nuestro servidor de Vite/React
+]
