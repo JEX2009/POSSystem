@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { featchProducts } from '/src/services/api';
 
 const ProductList = (props) => {
-  const { addToCar } = props;
+  const { addToCar, handleCheckout } = props;
   const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
 
@@ -25,10 +25,15 @@ const ProductList = (props) => {
     return <div className="text-red-500">{error}</div>;
   }
 
+  const handleClick = (product) => {
+    addToCar(product);
+    // handleCheckout();
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {products.map(product => (
-        <button key={product.id} className="bg-white p-4 rounded-lg shadow" onClick={() => addToCar(product)}>
+        <button key={product.id} className="bg-sky-10 p-4 rounded-lg shadow hover:cursor-pointer hover:bg-sky-50" onClick={() => handleClick(product)}>
           <h2 className="text-lg font-bold">{product.name}</h2>
           <p className="text-gray-600">₡{product.price}</p>
         </button>

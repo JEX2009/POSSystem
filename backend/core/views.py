@@ -12,10 +12,23 @@ class WorkerViewSet(viewsets.ModelViewSet):
     
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = m.Category.objects.all().order_by('name')
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = s.CategorySerializer
     
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = m.Product.objects.all().order_by('name')
     permission_classes = [permissions.AllowAny]
     serializer_class = s.ProductSerializer
+    
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = m.Order.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.OrderSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(worker=self.request.user)
+
+class OrderItemViewSet(viewsets.ModelViewSet):
+    queryset = m.OrderItem.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.OrderItemSerializer
