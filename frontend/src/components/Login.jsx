@@ -48,7 +48,7 @@ const Login = (props) => {
                     />
                     {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
                 </div>
-                <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 hover:cursor-pointer">
                     Entrar
                 </button>
             </form>

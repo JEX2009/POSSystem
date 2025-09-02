@@ -1,5 +1,9 @@
+# backend/core/serializers.py
+
 from rest_framework import serializers
 from . import models as m
+
+# --- Serializers Base (Correctos) ---
 
 class WorkerSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -8,14 +12,7 @@ class WorkerSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'email' , 'password']
         
     def create(self, validated_data):
-    # Usamos create_user para hashear la contraseña
-        worker = m.Worker.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
-        )
+        worker = m.Worker.objects.create_user(**validated_data)
         return worker
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -31,7 +28,8 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.Product
         fields = ['id', 'name', 'description', 'price',  'category', 'category_id']
-        
+
+# --- Serializers de Orden (Correctos) ---
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
@@ -45,48 +43,66 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = m.OrderItem
         fields= ['id', 'product', 'product_id', 'quantity', 'total', 'order_id']
         read_only_fields = ['total']
-        
-    def create(self, validated_data):
-        
-        tem = m.OrderItem.objects.create(
-                product=validated_data['product'],
-                quantity=validated_data['quantity'],
-                total= validated_data['quantity'] * validated_data['product'].price,
-                order_id= validated_data['order'].id
-            )
-        tem.save()
-        return tem
-        
+
 class OrderItemCreateSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
-        queryset=m.Product.objects.all(), source='product', write_only=True
+        queryset=m.Product.objects.all(), source='product'
     )
     class Meta:
         model = m.OrderItem
-        fields= ['id', 'product', 'product_id', 'quantity']
-        
+        fields= ['product_id', 'quantity']
+
+# --- Serializers de Salón y Mesa (CORREGIDOS) ---
+
+class TablesSerializer(serializers.ModelSerializer):
+    # Para la ESCRITURA: Espera el ID del salón al que pertenece la mesa
+    salon_id = serializers.PrimaryKeyRelatedField(
+        queryset=m.Salons.objects.all(), source='salon', write_only=True
+    )
+    
+    class Meta:
+        model = m.Tables
+        fields = ['id', 'name', 'salon_id']
+
+class SalonsSerializer(serializers.ModelSerializer):
+    # Para la LECTURA: Muestra la lista de mesas que pertenecen a este salón
+    tables = TablesSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = m.Salons
+        fields = ['id', 'name', 'tables']
+
+# --- Serializer de Orden Principal (CORREGIDO) ---
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemCreateSerializer(many=True)
     worker = WorkerSerializer(read_only=True)
     
+    # Para la ESCRITURA: Espera el ID de la mesa a la que se asigna la orden
+    table_id = serializers.PrimaryKeyRelatedField(
+        queryset=m.Tables.objects.all(), source='tables', write_only=True, required=False, allow_null=True
+    )
+
     class Meta:
         model = m.Order
-        fields = ['id', 'worker','invoice_number', 'items', 'total', 'created']
-        read_only_fields = ['total', 'invoice_number', 'worker','created']
+        fields = ['id', 'worker', 'invoice_number', 'items', 'total', 'created', 'table_id', 'sell_type', 'identificator']
+        read_only_fields = ['total', 'invoice_number', 'worker', 'created']
         
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        order = m.Order.objects.create(**validated_data)
+        
+        # Extraemos la mesa si viene en los datos
+        table_data = validated_data.pop('tables', None)
+        
+        order = m.Order.objects.create(tables=table_data, **validated_data)
         
         total_order_price = 0
         
-        for item in items_data:
-            product =item['product']
-            quantity = item['quantity']
+        for item_data in items_data:
+            product = item_data['product']
+            quantity = item_data['quantity']
             
-            # Creamos el OrderItem, asociándolo a la orden
+            # Creamos el OrderItem
             item = m.OrderItem.objects.create(
                 order=order,
                 product=product,
@@ -96,11 +112,9 @@ class OrderSerializer(serializers.ModelSerializer):
             
             line_total = product.price * quantity
             total_order_price += line_total
-            product.save()
             
-        # 5. Guardamos el total final en la orden
+        # Guardamos el total final en la orden
         order.total = total_order_price
         order.save()
         
         return order
-

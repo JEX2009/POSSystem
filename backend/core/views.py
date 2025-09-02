@@ -12,7 +12,8 @@ class WorkerViewSet(viewsets.ModelViewSet):
     
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = m.Category.objects.all().order_by('name')
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = s.CategorySerializer
     
 class ProductViewSet(viewsets.ModelViewSet):
@@ -32,3 +33,14 @@ class OrderItemViewSet(viewsets.ModelViewSet):
     queryset = m.OrderItem.objects.all().order_by('id')
     permission_classes = [permissions.AllowAny]
     serializer_class = s.OrderItemSerializer
+
+class TablesItemViewSet(viewsets.ModelViewSet):
+    queryset = m.Tables.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.TablesSerializer
+    
+class SalonsItemViewSet(viewsets.ModelViewSet):
+    queryset = m.Salons.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.SalonsSerializer
+    

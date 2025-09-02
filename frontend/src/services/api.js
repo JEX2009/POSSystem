@@ -26,7 +26,7 @@ apiClient.interceptors.response.use(
                 localStorage.setItem('access_token', response.data.access);
                 apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
                 return apiClient(error.config); // Reintenta la solicitud original
-            } catch  {
+            } catch {
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('refresh_token');
                 window.location.href = '/login';
@@ -70,7 +70,7 @@ export const fetchLogin = async (username, password) => {
 
 export const createOrder = async (data) => {
     try {
-        const response = await apiClient.post('/order/',data );
+        const response = await apiClient.post('/order/', data);
         return response.data;
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -80,10 +80,49 @@ export const createOrder = async (data) => {
 
 export const addItemToOrder = async (data) => {
     try {
-        const response = await apiClient.post('/order-items/',data );
-        return response.status;
+        const response = await apiClient.post('/order-items/', data);
+        return response.data;
     } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error adding item:', error);
+        throw error;
+    }
+}
+
+export const updateItemQuantity = async (product) => {
+    try {
+        const response = await apiClient.patch('/order-items/' + product['order_id'] + '/', product)
+        return response.statusText
+    } catch (error) {
+        console.error('Error modifiying order:', error);
+        throw error;
+    }
+}
+
+export const createCategory = async (category) => {
+    try {
+        const response = await apiClient.post('/category/', category)
+        return response.data;
+    } catch (error) {
+        return error
+    }
+}
+
+export const featchCategory = async () => {
+    try {
+        const response = await apiClient.get('/category/')
+        return response.data;
+    } catch (error) {
+        console.error('Error featching categorys:', error);
+        throw error;
+    }
+}
+
+export const featchSalons= async () => {
+    try {
+        const response = await apiClient.get('/salons/');
+        return response.data;
+    } catch (error) {
+        console.log(error);
         throw error;
     }
 }

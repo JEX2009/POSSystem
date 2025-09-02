@@ -1,5 +1,3 @@
-// frontend/src/components/ProductList.jsx
-
 import React, { useState, useEffect } from 'react';
 import { featchProducts } from '/src/services/api';
 
