@@ -2,28 +2,28 @@ import '/src/static/Tailwind.css'
 import { useNavigate } from 'react-router-dom';
 
 export default function Cart(props) {
-    const { cart, handleDelete } = props;
-    const isCartEmpty = cart.length === 0;
+    const { sendingCart, handleDelete } = props;
+    const isCartEmpty = sendingCart.length === 0;
 
 
-    const total = cart.reduce((sum, item) => {
+    const total = sendingCart.reduce((sum, item) => {
         return sum + (item.price * item.quantity);
     }, 0);
     const navigate = useNavigate();
 
     const handleNavigation = () => {
-        navigate('/table-assign', {state: {carrito : cart}});
+        navigate('/table-assign', {state: {sendingCart : sendingCart}});
 
     };
 
     return (
         <div className="bg-white p-4 rounded-lg shadow mt-4">
             <h2 className="text-xl font-bold mb-4">Carrito de Compras</h2>
-            {cart.length === 0 ? (
+            {sendingCart.length === 0 ? (
                 <p className="text-gray-600">El carrito está vacío.</p>
             ) : (
                 <ul>
-                    {cart.map((item, index) => (
+                    {sendingCart.map((item, index) => (
                         <li key={index} className="border-b py-2 flex flex-col gap-2 justify-between ">
                             <div className='flex gap-2 justify-between'>
                                 <span className="font-semibold">{item.name}</span>

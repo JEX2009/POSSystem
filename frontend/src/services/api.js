@@ -78,6 +78,16 @@ export const createOrder = async (data) => {
     }
 };
 
+export const updateOrder = async (order_id , data) => {
+    try {
+        const response = await apiClient.patch('/order/' + order_id + "/", data);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+    }
+};
+
 export const addItemToOrder = async (data) => {
     try {
         const response = await apiClient.post('/order-items/', data);
