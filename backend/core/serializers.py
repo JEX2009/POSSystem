@@ -3,7 +3,7 @@
 from rest_framework import serializers
 from . import models as m
 
-# --- Serializers Base (Correctos) ---
+# --- Serializers Base (Sin cambios) ---
 
 class WorkerSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -29,20 +29,13 @@ class ProductSerializer(serializers.ModelSerializer):
         model = m.Product
         fields = ['id', 'name', 'description', 'price',  'category', 'category_id']
 
-# --- Serializers de Orden (Correctos) ---
+# --- Serializers de Orden (Con una pequeña corrección) ---
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=m.Product.objects.all(), source='product', write_only=True
-    )
-    order_id = serializers.PrimaryKeyRelatedField(
-        queryset =m.Order.objects.all(), source='order', write_only=True
-    )
     class Meta:
         model = m.OrderItem
-        fields= ['id', 'product', 'product_id', 'quantity', 'total', 'order_id']
-        read_only_fields = ['total']
+        fields= ['id', 'product', 'quantity', 'total']
 
 class OrderItemCreateSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(
@@ -52,49 +45,76 @@ class OrderItemCreateSerializer(serializers.ModelSerializer):
         model = m.OrderItem
         fields= ['product_id', 'quantity']
 
-# --- Serializers de Salón y Mesa (CORREGIDOS) ---
+# --- MODIFICACIÓN #1: Serializers de Salón y Mesa DESACOPLADOS ---
 
-class TablesSerializer(serializers.ModelSerializer):
-    # Para la ESCRITURA: Espera el ID del salón al que pertenece la mesa
-    salon_id = serializers.PrimaryKeyRelatedField(
-        queryset=m.Salons.objects.all(), source='salon', write_only=True
-    )
-    
+# Este serializer es SOLO para mostrar los datos de la orden en la lista de mesas
+class SimpleOrderSerializer(serializers.ModelSerializer):
+    #-- MODIFICACIÓN: Añadido para que puedas ver los items en el modal
+    items = OrderItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = m.Order
+        fields = ['id', 'total', 'created', 'canceled', 'items'] 
+
+# Este serializer es SOLO para LEER las mesas dentro de un salón
+class TablesReadOnlySerializer(serializers.ModelSerializer):
+    active_order = serializers.SerializerMethodField()
+
     class Meta:
         model = m.Tables
-        fields = ['id', 'name', 'salon_id']
+        fields = ['id', 'name', 'active_order']
 
+    def get_active_order(self, obj):
+        active_order = obj.orders.filter(canceled=False).first()
+        if active_order:
+            return SimpleOrderSerializer(active_order).data
+        return None
+
+# Este serializer es para LEER la lista de salones
 class SalonsSerializer(serializers.ModelSerializer):
-    # Para la LECTURA: Muestra la lista de mesas que pertenecen a este salón
-    tables = TablesSerializer(many=True, read_only=True)
+    # Usa el serializer de solo lectura para evitar el bucle
+    tables = TablesReadOnlySerializer(many=True, read_only=True)
 
     class Meta:
         model = m.Salons
         fields = ['id', 'name', 'tables']
 
-# --- Serializer de Orden Principal (CORREGIDO) ---
+# --- MODIFICACIÓN #2: Un serializer específico para CREAR/ACTUALIZAR mesas ---
+class TablesWriteSerializer(serializers.ModelSerializer):
+    # Para la escritura, solo necesitamos el ID del salón
+    salon_id = serializers.PrimaryKeyRelatedField(
+        queryset=m.Salons.objects.all(), source='salon'
+    )
+    class Meta:
+        model = m.Tables
+        fields = ['id', 'name', 'salon_id']
+
+
+# --- Serializer de Orden Principal (Con correcciones) ---
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemCreateSerializer(many=True)
+    items = OrderItemCreateSerializer(many=True, write_only=True)
     worker = WorkerSerializer(read_only=True)
     
-    # Para la ESCRITURA: Espera el ID de la mesa a la que se asigna la orden
+    # Para LEER la orden, mostramos los items completos
+    items_read = OrderItemSerializer(source='items', many=True, read_only=True)
+    
     table_id = serializers.PrimaryKeyRelatedField(
-        queryset=m.Tables.objects.all(), source='tables', write_only=True, required=False, allow_null=True
+        queryset=m.Tables.objects.all(), source='table', write_only=True, required=False, allow_null=True
     )
 
     class Meta:
         model = m.Order
-        fields = ['id', 'worker', 'invoice_number', 'items', 'total', 'created', 'table_id', 'sell_type', 'identificator']
+        fields = ['id', 'worker', 'invoice_number', 'items', 'items_read', 'total', 'created', 'table_id', 'sell_type', 'identificator', 'canceled']
         read_only_fields = ['total', 'invoice_number', 'worker', 'created']
         
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         
-        # Extraemos la mesa si viene en los datos
-        table_data = validated_data.pop('tables', None)
+        #-- MODIFICACIÓN #3: Corregido el nombre de la clave
+        table_instance = validated_data.pop('table', None)
         
-        order = m.Order.objects.create(tables=table_data, **validated_data)
+        #-- MODIFICACIÓN #4: Pasamos la instancia de la mesa, no los datos
+        order = m.Order.objects.create(table=table_instance, **validated_data)
         
         total_order_price = 0
         
@@ -102,18 +122,17 @@ class OrderSerializer(serializers.ModelSerializer):
             product = item_data['product']
             quantity = item_data['quantity']
             
-            # Creamos el OrderItem
-            item = m.OrderItem.objects.create(
+            line_total = product.price * quantity
+            
+            m.OrderItem.objects.create(
                 order=order,
                 product=product,
                 quantity=quantity,
-                total= product.price # Guardamos el precio del momento
+                total=line_total # Guardamos el total de la línea
             )
             
-            line_total = product.price * quantity
             total_order_price += line_total
             
-        # Guardamos el total final en la orden
         order.total = total_order_price
         order.save()
         

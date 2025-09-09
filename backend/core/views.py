@@ -37,8 +37,11 @@ class OrderItemViewSet(viewsets.ModelViewSet):
 class TablesItemViewSet(viewsets.ModelViewSet):
     queryset = m.Tables.objects.all().order_by('id')
     permission_classes = [permissions.AllowAny]
-    serializer_class = s.TablesSerializer
-    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return s.TablesWriteSerializer
+        return s.TablesReadOnlySerializer
+
 class SalonsItemViewSet(viewsets.ModelViewSet):
     queryset = m.Salons.objects.all().order_by('id')
     permission_classes = [permissions.AllowAny]

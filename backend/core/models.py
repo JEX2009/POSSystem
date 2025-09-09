@@ -49,7 +49,8 @@ class Order(models.Model):
     invoice_number  = models.CharField(max_length=50, unique=True, blank=True, null=True)
     sell_type = models.CharField(max_length=50, choices=ORDER_TYPE_CHOICES,default=ORDER_TYPE_TABLE)
     identificator = models.CharField(max_length=50, blank=True, null=True)
-    tables = models.ForeignKey(Tables,on_delete=models.CASCADE, related_name='orders',null=True, blank=True )
+    table = models.ForeignKey(Tables,on_delete=models.CASCADE, related_name='orders',null=True, blank=True )
+    canceled = models.BooleanField(default=False)
     def __str__(self):
         return f"Order {self.id} por {self.worker.username}"
     
