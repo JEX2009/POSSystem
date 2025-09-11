@@ -32,6 +32,7 @@ const SalonList = ({ salones, saveOrder, onTableSelect }) => {
                                     className={`${buttonColor} p-4 rounded-lg shadow-md transition-transform transform hover:scale-105`}
                                     onClick={handleTableClick}
                                 >
+                                    
                                     <h2 className="text-lg font-bold">{mesa.name}</h2>
                                     {isOccupied && (
                                         <p className="text-sm font-semibold mt-1">

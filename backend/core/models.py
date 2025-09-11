@@ -51,6 +51,15 @@ class Order(models.Model):
     identificator = models.CharField(max_length=50, blank=True, null=True)
     table = models.ForeignKey(Tables,on_delete=models.CASCADE, related_name='orders',null=True, blank=True )
     canceled = models.BooleanField(default=False)
+    
+    def calculate_total(self):
+        """
+        Calcula el total de la orden sumando los totales de cada OrderItem.
+        """
+        order_items = self.items.select_related('product').all()
+        new_total = sum(item.product.price * item.quantity for item in order_items)
+        return new_total
+
     def __str__(self):
         return f"Order {self.id} por {self.worker.username}"
     

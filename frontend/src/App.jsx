@@ -3,9 +3,10 @@ import Login from './components/Login';
 import { useState } from 'react';
 import { Route, Routes, Navigate, Link } from 'react-router-dom';
 import AppLayout  from './layout/AppLayout';
-import ItemsPage  from './pages/ItemsPage';
-import TablesPage  from './pages/TablesPage';
-import CategorysPage  from './pages/CategorysPage';
+import ItemsPage  from './features/items/ItemsPage';
+import TablesPage  from './features/tables/TablesPage';
+import CategorysPage  from './features/category/CategorysPage';
+
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('access_token'));

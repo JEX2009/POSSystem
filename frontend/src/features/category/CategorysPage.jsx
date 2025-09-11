@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
-import { createCategory ,featchCategory} from '../services/api';
+import { createCategory ,featchCategory} from '../../services/api/apiCategory';
 import { useState } from 'react';
-import CategoryList from '../components/CategoryList';
+import CategoryList from './components/CategoryList';
 
 export default function CategorysPage() {
     const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -12,6 +12,7 @@ export default function CategorysPage() {
 
     const handleCreate = async (data) => {
         setApiError(null);
+
         setApiSucces(null);
         try {
             const response = await createCategory({ "name": data.name });

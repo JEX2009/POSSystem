@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form'; // 1. Importar useForm
-import { fetchLogin } from '../services/api';
+import { fetchLogin } from '../services/api/apiUser';
 
 const Login = (props) => {
     const { onLoginSuccess } = props;

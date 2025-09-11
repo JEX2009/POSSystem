@@ -1,22 +1,17 @@
-import { featchSalons, createOrder, updateOrder } from "../services/api";
+import { featchSalons } from "../../services/api/apiSalon";
+import { createOrder } from "../../services/api/apiOrder";
 import { useState, useEffect } from 'react';
-import SalonList from '../components/SalonList';
+import SalonList from './components/SalonList';
 import { useLocation, useNavigate } from 'react-router-dom';
-import FacturacionModal from "../components/FacturacionModal";
 
 export default function TablesPage() {
     const [salones, setSalones] = useState([]);
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     // --- ESTADO SIMPLIFICADO ---
     // El carrito que viene de la otra página
-    const cartToAssign = location.state?.sendingCart || []; 
-    
-    // Estado para el modal de facturación
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    // Estado para saber QUÉ orden facturar
-    const [orderToBill, setOrderToBill] = useState(null);
+    const cartToAssign = location.state?.sendingCart || [];
 
     // --- FUNCIÓN PARA OBTENER DATOS (Sin cambios) ---
     const fidingSalons = async () => {
@@ -48,16 +43,16 @@ export default function TablesPage() {
             }));
 
             // 2. El payload AHORA es correcto. 'table_id' está al nivel principal.
-            const orderPayload = { 
+            const orderPayload = {
                 items: formattedItems,
-                table_id: tableId 
+                table_id: tableId
             };
-            
+
             await createOrder(orderPayload);
-            
+
             // 3. Refrescamos los datos para ver la mesa ocupada
             fidingSalons();
-            
+
             // 4. Limpiamos el estado de la navegación para no re-asignar por error
             navigate(location.pathname, { replace: true, state: {} });
 
@@ -65,29 +60,10 @@ export default function TablesPage() {
             console.log("Error al crear la orden:", error);
         }
     }
-    
+
     // --- NUEVAS FUNCIONES PARA MANEJAR EL MODAL ---
     const openBillingModal = (order) => {
-        setOrderToBill(order); // Guardamos la orden específica que se va a facturar
-        setIsModalOpen(true);
-    };
-
-    const closeBillingModal = () => {
-        setIsModalOpen(false);
-        setOrderToBill(null); // Limpiamos la orden al cerrar
-    };
-    
-    // --- FUNCIÓN PARA PASAR AL MODAL Y ACTUALIZAR LA VISTA ---
-    const handleBillingSuccess = async () => {
-        if (!orderToBill) return;
-
-        try {
-            await updateOrder(orderToBill.id, { canceled: true });
-            closeBillingModal(); // Cerramos el modal
-            fidingSalons(); // ¡Refrescamos los datos para que la mesa se libere!
-        } catch(error) {
-            console.error("Error al facturar la orden:", error);
-        }
+        navigate('/', {state: {orderToBill : order}});
     };
 
     return (
@@ -97,18 +73,9 @@ export default function TablesPage() {
                     salones={salones}
                     saveOrder={saveOrder}
                     // Le pasamos la función para abrir el modal con la orden correcta
-                    onTableSelect={openBillingModal} 
+                    onTableSelect={openBillingModal}
                 />
-                
-                {/* El modal ahora se renderiza aquí para tener acceso a todo el estado */}
-                {isModalOpen && (
-                    <FacturacionModal
-                        isModalOpen={isModalOpen}
-                        closeModal={closeBillingModal}
-                        cart={orderToBill} // Le pasamos la orden específica
-                        onSuccess={handleBillingSuccess} // Le pasamos la función de refresco
-                    />
-                )}
+
             </div>
         </div>
     )
