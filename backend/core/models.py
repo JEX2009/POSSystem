@@ -72,3 +72,56 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
     
+class EconomicActivity(models.Model):
+    activity_id = models.CharField(max_length=10)
+    activity_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.activity_name
+
+class Client(models.Model):
+    client_name = models.CharField(max_length=100)
+    economic_activity = models.ForeignKey(EconomicActivity, on_delete=models.SET_NULL, null=True, blank=True)
+    client_email = models.EmailField(max_length=100) # EmailField valida el formato de email
+    client_phone = models.CharField(max_length=20, blank=True)
+
+    def __str__(self):
+        return self.client_name
+
+class BusinessProfile(models.Model):
+    business_name = models.CharField(max_length=50)
+    address = models.CharField(max_length=200)
+    phone_number = models.CharField(max_length=20)
+    certificate = models.CharField(max_length=50)
+    
+    def __str__(self):
+        return self.business_name
+
+class Bill(models.Model):
+    business_data = models.ForeignKey(BusinessProfile, on_delete=models.PROTECT)
+    document_type = models.CharField(max_length=50)
+    bill_number = models.CharField(max_length=50, unique=True) # Un número de factura debe ser único
+    date_time = models.DateTimeField(auto_now_add=True)
+    client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name='bills')
+    
+    # Estos campos probablemente vendrán como un objeto JSON, CharField o TextField es mejor
+    type_of_pay = models.CharField(max_length=255) 
+    client_pay = models.DecimalField(max_digits=10, decimal_places=2)
+    change = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Campos fiscales
+    e_billing_key = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    qr = models.TextField(blank=True) # TextField es mejor para strings largos
+
+    def __str__(self):
+        return f"{self.document_type} - {self.bill_number}"
+
+class BillItem(models.Model):
+    bill = models.ForeignKey(Bill, on_delete=models.CASCADE, related_name='items')
+    product_name = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField()
+    price_at_sale = models.DecimalField(max_digits=10, decimal_places=2)
+    line_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product_name} en Factura #{self.bill.id}"

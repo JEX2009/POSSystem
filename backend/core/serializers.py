@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 from . import models as m
+from django.db import transaction
 
 # --- Serializers Base (Sin cambios) ---
 
@@ -105,7 +106,6 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['id', 'worker', 'invoice_number', 'items', 'items_read', 'total', 'created', 'table_id', 'sell_type', 'identificator', 'canceled']
         read_only_fields = ['total', 'invoice_number', 'worker', 'created']
 
-    # ... (Tu método 'create' no necesita cambios) ...
     def create(self, validated_data):
         items_data = validated_data.pop('items', [])
         table_instance = validated_data.pop('table', None)
@@ -120,63 +120,122 @@ class OrderSerializer(serializers.ModelSerializer):
         order.total = order.calculate_total()
         order.save()
         return order
-        
+    
+    @transaction.atomic
     def update(self, instance, validated_data):
-        """
-        Este método sincroniza los items de una orden. Recibe una lista de items
-        del frontend y ajusta la base de datos para que coincida, manejando
-        la creación, actualización y eliminación de items.
-        """
-        # Obtenemos la lista de items del frontend. Si no viene, es una lista vacía.
-        items_data = validated_data.pop('items', [])
+        # 1. Extraemos items y dejamos que super().update maneje los campos simples
+        items_data = validated_data.pop('items', None)
+        instance = super().update(instance, validated_data)
 
-        # --- FASE 1: PREPARACIÓN ---
-        # Creamos un mapa de los items que ya existen en la BD para un acceso rápido.
-        # { 25: <OrderItem object (id=25)>, 26: <OrderItem object (id=26)> }
+        if items_data is None:
+            return instance
+
+        # --- FASE 1: PREPARACIÓN Y SINCRONIZACIÓN ---
+
+        # 1.1. Obtenemos IDs de ítems que DEBEN existir después de esta actualización
+        incoming_order_item_ids = set()
+        
+        # Almacenes para las operaciones en lote (bulk)
+        items_to_update = []
+        items_to_create = []
+
+        # Mapa de todos los productos necesarios (incluye IDs para ítems nuevos y sus precios)
+        product_ids_needed = {item_data['product_id'] for item_data in items_data if 'product_id' in item_data}
+        products_map = {p.id: p for p in m.Product.objects.filter(id__in=product_ids_needed)}
+        
+        # Mapa de items existentes en la orden (por su ID de OrderItem)
         existing_items_map = {item.id: item for item in instance.items.all()}
 
-        # Usaremos un 'set' para guardar los IDs de los items que nos llegan del frontend.
-        incoming_item_ids = set()
-
-        # --- FASE 2: PROCESAMIENTO (ACTUALIZAR Y CREAR) ---
-        # Recorremos la lista de items que nos envió el frontend.
         for item_data in items_data:
-            item_id = item_data.get('id', None)
+            # A. ÍTEM EXISTENTE (El frontend envía 'id')
+            if 'id' in item_data:
+                order_item_id = item_data['id']
+                if order_item_id in existing_items_map:
+                    order_item = existing_items_map[order_item_id]
+                    product = order_item.product # Usamos el producto ya cargado
+                    
+                    # 1. Actualizar cantidad y total
+                    order_item.quantity = item_data['quantity']
+                    order_item.total = product.price * order_item.quantity
+                    items_to_update.append(order_item)
+                    incoming_order_item_ids.add(order_item_id)
+            
+            # B. ÍTEM NUEVO (El frontend envía 'product_id')
+            elif 'product_id' in item_data:
+                product_id = item_data['product_id']
+                product = products_map.get(product_id)
 
-            if item_id:
-                # CASO A: El item ya existía (tiene ID).
-                incoming_item_ids.add(item_id)
-                if item_id in existing_items_map:
-                    # Lo encontramos en nuestro mapa, actualizamos su cantidad y guardamos.
-                    item_instance = existing_items_map[item_id]
-                    item_instance.quantity = item_data['quantity']
-                    item_instance.save()
-            else:
-                # CASO B: El item es nuevo (no tiene ID).
-                product_id = item_data.get('product_id')
-                if product_id:
-                    product_instance = m.Product.objects.get(id=product_id) 
-                    quantity = item_data.get('quantity', 1)
-                    # Usamos el ingrediente que ya trajimos (el precio).
-                    line_total = product_instance.price * quantity 
-                    # Creamos un nuevo OrderItem en la base de datos.
-                    m.OrderItem.objects.create(
+                if product:
+                    # 1. Preparar para crear
+                    items_to_create.append(m.OrderItem(
                         order=instance,
-                        product_id=product_id,
+                        product=product,
                         quantity=item_data['quantity'],
-                        total=line_total
-                    )
+                        total=product.price * item_data['quantity']
+                    ))
+            
+            # C. Ignorar cualquier otro payload malformado
 
-        # --- FASE 3: LIMPIEZA (ELIMINAR) ---
-        # Comparamos los IDs originales con los que llegaron. Los que falten, se borran.
-        ids_to_delete = set(existing_items_map.keys()) - incoming_item_ids
-        if ids_to_delete:
-            m.OrderItem.objects.filter(id__in=ids_to_delete).delete()
+        # --- FASE 2: ESCRITURA EN BASE DE DATOS (OPERACIONES EN LOTE) ---
+
+        if items_to_update:
+            m.OrderItem.objects.bulk_update(items_to_update, ['quantity', 'total'])
+
+        if items_to_create:
+            m.OrderItem.objects.bulk_create(items_to_create)
+
+        # --- FASE 3: LIMPIEZA (BORRADO) ---
+
+        # Encontramos los IDs de los ítems que estaban en la orden pero no llegaron en el payload
+        current_order_item_ids = set(existing_items_map.keys())
+        items_to_delete_ids = current_order_item_ids - incoming_order_item_ids
+        
+        if items_to_delete_ids:
+                # Borramos en lote: los ítems que NO deben existir y que NO son ítems nuevos
+                m.OrderItem.objects.filter(id__in=items_to_delete_ids).delete()
+
 
         # --- FASE 4: FINALIZACIÓN ---
-        # Recalculamos el total de la orden con los datos actualizados y guardamos.
         instance.total = instance.calculate_total()
         instance.save()
-        
-        # Devolvemos la instancia de la orden actualizada.
+
         return instance
+
+class EconomicActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.EconomicActivity
+        fields = ['id', 'activity_id', 'activity_name']
+
+class ClientSerializer(serializers.ModelSerializer):
+    economic_activity = serializers.StringRelatedField(source='economicActivity')
+    class Meta:
+        model = m.Client
+        fields = ['id', 'client_name', 'economic_activity','client_email','client_phone' ]
+
+class BusinessProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.BusinessProfile
+        fields = ['id', 'business_name','address','phone_number', 'certificate']
+
+class BillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = m.BusinessProfile
+
+# class Bill(models.Model):
+#     business_data = models.ForeignKey(BusinessProfile, on_delete=models.PROTECT)
+#     document_type = models.CharField(max_length=50)
+#     bill_number = models.CharField(max_length=50, unique=True) # Un número de factura debe ser único
+#     date_time = models.DateTimeField(auto_now_add=True)
+#     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name='bills')
+    
+#     # Estos campos probablemente vendrán como un objeto JSON, CharField o TextField es mejor
+#     type_of_pay = models.CharField(max_length=255) 
+#     client_pay = models.DecimalField(max_digits=10, decimal_places=2)
+#     change = models.DecimalField(max_digits=10, decimal_places=2)
+    
+#     # Campos fiscales
+#     e_billing_key = models.CharField(max_length=50, unique=True, null=True, blank=True)
+#     qr = models.TextField(blank=True) # TextField es mejor para strings largos
+
+#     def __str__(self):
+#         return f"{self.document_type} - {self.bill_number}"

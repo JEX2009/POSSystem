@@ -18,17 +18,15 @@ const ProductList = (props) => {
         console.error(err);
       }
     };
-
-
     getProducts();
   }, [refreshTrigger]);
+
   if (error) {
     return <div className="text-red-500">{error}</div>;
   }
 
   const handleClick = (product) => {
     addToCar(product);
-    // handleCheckout();
   }
 
   const handleSearchChange = (event) => {

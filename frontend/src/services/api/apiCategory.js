@@ -1,11 +1,11 @@
-import {apiClient} from "./../apiClient"
+import { apiClient } from "./../apiClient"
 
 export const createCategory = async (category) => {
     try {
         const response = await apiClient.post('/category/', category)
         return response.data;
     } catch (error) {
-        console.error('Error creating category:', error);
+        throw error;
     }
 }
 
@@ -14,6 +14,6 @@ export const featchCategory = async () => {
         const response = await apiClient.get('/category/')
         return response.data;
     } catch (error) {
-        console.error('Error featching categorys:', error);
+        throw error;
     }
 }

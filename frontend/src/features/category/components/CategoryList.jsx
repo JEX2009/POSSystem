@@ -1,15 +1,20 @@
-import React, { useEffect } from 'react';
+import ErrorMessage from "../../../components/ErrorMessage";
+import LoadingSpiner from "../../../components/LoadingSpinner";
 
-const CategoryList= (props)=> {
-    const {getCategorys, categorys, error} = props
-    
+const CategoryList = (props) => {
+    const { categorys, error, isLoading } = props
 
-    useEffect(() => {
-        getCategorys();
-    }, []);
-    if (error) {
-        return <div className="text-red-500">{error}</div>;
+
+    if (isLoading) {
+        return <LoadingSpiner />;
     }
+
+    if (error) {
+        return <ErrorMessage
+            message={error}
+        />;
+    }
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5">
@@ -20,6 +25,6 @@ const CategoryList= (props)=> {
             ))}
         </div>
     )
-} 
+}
 
 export default CategoryList;
