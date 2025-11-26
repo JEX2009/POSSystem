@@ -5,7 +5,7 @@ import PaymentMethods from "./components/PaymentMethods";
 import CalculationsPanel from "./components/CalculationsPanel";
 import SplitBill from "./components/SplitBill";
 import useSplitBill from "./hook/useSplitBill";
-import useInvoice from "../hook/useInvoice";
+import useInvoice from "./hook/useInvoice";
 
 const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrderForBilling }) => {
     const { paymentMethods, paymentAmounts, facturarError, checkedState, isSplitViewOpen, setSplitViewOpen, money, handleCheckboxChange, handleAdd, handleFacturar, tipoDocumento, setTipoDocumento, handleAmountChange, setActivePaymentMethod, totalPagado } = useFacturation(isModalOpen, cart, onSuccess, closeOrderForBilling);
@@ -13,7 +13,7 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
     const {invoiceModalOpen,closeInvoiceModal}=useInvoice(onSuccess);
     const { productosRestantes, productosDivididos, dividirProducto, devolverProducto, setProductosDivididos } = useSplitBill(items);
 
-    const totalAPagar = !isSplitViewOpen ? cart.total : productosDivididos.reduce((suma, monto) => suma + monto.product.price, 0);
+    const totalAPagar = !isSplitViewOpen ? cart.total : productosDivididos.reduce((suma, object) => suma + object.product.price * object.quantity, 0);
     const onProcessPayment = () => {
         const esPagoValido = handleFacturar(totalAPagar);
 
