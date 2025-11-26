@@ -46,4 +46,29 @@ class SalonsItemViewSet(viewsets.ModelViewSet):
     queryset = m.Salons.objects.all().order_by('id')
     permission_classes = [permissions.AllowAny]
     serializer_class = s.SalonsSerializer
-    
+
+class EconomicActivityViewSet(viewsets.ModelViewSet):
+    queryset = m.EconomicActivity.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.EconomicActivitySerializer
+
+class ClientViewSet(viewsets.ModelViewSet):
+    queryset = m.Client.objects.all().order_by('client_name')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.ClientSerializer
+
+class BusinessProfileViewSet(viewsets.ModelViewSet):
+    queryset = m.BusinessProfile.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.BusinessProfileSerializer
+
+class BillViewSet(viewsets.ModelViewSet):
+    queryset = m.Bill.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.BillSerializer
+
+class BillItemViewSet(viewsets.ModelViewSet):
+    queryset = m.BillItem.objects.all().order_by('id')
+    permission_classes = [permissions.AllowAny]
+    serializer_class = s.BillItemSerializer
+

@@ -1,7 +1,7 @@
 import '/src/static/Tailwind.css'
 import Login from './components/Login';
 import { useState } from 'react';
-import { Route, Routes, Navigate, Link } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import AppLayout  from './layout/AppLayout';
 import ItemsPage  from './features/items/ItemsPage';
 import TablesPage  from './features/tables/TablesPage';

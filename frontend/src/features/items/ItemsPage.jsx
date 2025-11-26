@@ -19,8 +19,6 @@ export default function ItemsPage() {
     // Un contador que se usa como "gatillo" para refrescar la lista de productos.
     const [refreshProductListTrigger, setRefreshProductListTrigger] = useState(0);
 
-    // Callback que se ejecuta cuando se crea un nuevo producto con éxito.
-    // Incrementa el "gatillo" para forzar la recarga del componente ProductList.
     const handleProductAdded = () => {
         setRefreshProductListTrigger(currentValue => currentValue + 1);
     }

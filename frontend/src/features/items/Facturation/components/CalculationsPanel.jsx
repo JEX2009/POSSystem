@@ -1,6 +1,6 @@
+
 export default function CalculationsPanel(props) {
     const { total, money, handleAdd, totalPagado, onProcessPayment,} = props;
-
     return(
         <>
         <h3 className="font-semibold text-lg">Total: ₡{parseFloat(total).toLocaleString('es-CR')}</h3>
