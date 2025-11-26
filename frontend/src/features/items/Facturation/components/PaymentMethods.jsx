@@ -5,7 +5,7 @@ export default function PaymentMethods(props) {
         <>
             <h3 className="font-semibold mb-2">Métodos de Pago</h3>
             {paymentMethods.map(method => (
-                <div key={method} className="flex items-center justify-between mb-2">
+                <div key={method} className="flex items-center justify-between mb-2 mt-4">
                     <span className="text-sm font-medium">{method}</span>
                     {checkedState[method] && (
                         <input

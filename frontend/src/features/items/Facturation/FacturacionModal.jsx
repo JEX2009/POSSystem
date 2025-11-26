@@ -5,7 +5,7 @@ import PaymentMethods from "./components/PaymentMethods";
 import CalculationsPanel from "./components/CalculationsPanel";
 import SplitBill from "./components/SplitBill";
 import useSplitBill from "./hook/useSplitBill";
-import useInvoice from "../hook/useInvoice";
+import useInvoice from "./hook/useInvoice";
 
 const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrderForBilling }) => {
     const { paymentMethods, paymentAmounts, facturarError, checkedState, isSplitViewOpen, setSplitViewOpen, money, handleCheckboxChange, handleAdd, handleFacturar, tipoDocumento, setTipoDocumento, handleAmountChange, setActivePaymentMethod, totalPagado } = useFacturation(isModalOpen, cart, onSuccess, closeOrderForBilling);
@@ -13,7 +13,7 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
     const {invoiceModalOpen,closeInvoiceModal}=useInvoice(onSuccess);
     const { productosRestantes, productosDivididos, dividirProducto, devolverProducto, setProductosDivididos } = useSplitBill(items);
 
-    const totalAPagar = !isSplitViewOpen ? cart.total : productosDivididos.reduce((suma, monto) => suma + monto.product.price, 0);
+    const totalAPagar = !isSplitViewOpen ? cart.total : productosDivididos.reduce((suma, object) => suma + object.product.price * object.quantity, 0);
     const onProcessPayment = () => {
         const esPagoValido = handleFacturar(totalAPagar);
 
@@ -36,7 +36,7 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
 
     return (
         <PopUp isModalOpen={isModalOpen} closeModal={closeModal}>
-            <div className={`transition-all duration-500 ease-in-out ${isSplitViewOpen ? 'w-[1050px]' : 'w-[700px]'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${isSplitViewOpen ? 'w-[1220px]' : 'w-[700px]'}`}>
                 <h2 className="text-xl font-bold mb-2">Facturar Orden #{cart.id}</h2>
                 {facturarError.state && (<span className='text-lg font-sans mb-4 text-red-600'>{facturarError.error}</span>)}
                 <div className="flex overflow-hidden">
@@ -71,7 +71,7 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
                             </div>
 
                             {/* Columna 4: Total y Facturación */}
-                            <div className="col-span-1 bg-gray-700 p-4 rounded-lg flex flex-col text-white">
+                            <div className="col-span-1 bg-gray-700 p-4 rounded-lg h-130 flex flex-col text-white">
                                 <CalculationsPanel
                                     total={totalAPagar}
                                     money={money}
@@ -82,7 +82,7 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
                             </div>
                         </div>
                     </div>
-                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSplitViewOpen ? 'w-[300px] p-4' : 'w-0'} grid grid-cols-2`}>
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSplitViewOpen ? 'w-[900px] p-4' : 'w-0'} grid grid-cols-2`}>
                         <SplitBill
                             productosRestantes={productosRestantes}
                             productosDivididos={productosDivididos}
