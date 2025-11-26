@@ -5,7 +5,7 @@ export default function CalculationsPanel(props) {
         <>
         <h3 className="font-semibold text-lg">Total: ₡{parseFloat(total).toLocaleString('es-CR')}</h3>
         <h3 className="font-semibold mt-2">Pagos Rápidos:</h3>
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-3 gap-2 mt-4">
             {money.map(bill => (
                 <button key={bill} className="cursor-pointer border border-gray-600 rounded hover:bg-gray-600 " onClick={() => handleAdd(bill)}>₡{bill}
                 </button>
@@ -15,7 +15,7 @@ export default function CalculationsPanel(props) {
         <div className="mt-auto pt-4">
             <h3 className="font-semibold">Pagado: ₡{totalPagado.toLocaleString('es-CR')}</h3>
             <h3 className="font-semibold">Cambio: ₡{(totalPagado - total).toLocaleString('es-CR')}</h3>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg p-3 mt-2 font-bold cursor-pointer" onClick={onProcessPayment}>
+            <button className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg p-3 mt-2 font-bold cursor-pointer mb-4" onClick={onProcessPayment}>
                 Facturar
             </button>
         </div>
