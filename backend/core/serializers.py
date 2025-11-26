@@ -23,9 +23,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=m.Category.objects.all(), source='category', write_only=True
-    )
+    category_id = serializers.PrimaryKeyRelatedField(queryset=m.Category.objects.all(), source='category', write_only=True)
     class Meta:
         model = m.Product
         fields = ['id', 'name', 'description', 'price',  'category', 'category_id']
@@ -110,16 +108,29 @@ class OrderSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items', [])
         table_instance = validated_data.pop('table', None)
         order = m.Order.objects.create(table=table_instance, **validated_data)
+        product_ids = [item['product_id'] for item in items_data]
+        products = m.Product.objects.filter(id__in=product_ids)
+        products_map = {product.id : product for product in products}
+        items_to_create = []
         for item_data in items_data:
-            product = m.Product.objects.get(id=item_data['product_id'])
-            quantity = item_data['quantity']
-            line_total = product.price * quantity
-            m.OrderItem.objects.create(
-                order=order, product=product, quantity=quantity, total=line_total
+            product = products_map.get(item_data['product_id'])
+            if not product:
+                continue
+            
+            quanttity = item_data['quantity']
+            line_total = product.price * quanttity
+            items_to_create.append(
+                m.OrderItem(    
+                    order=order, product=product, quantity=quanttity, total=line_total
+                )
             )
+            
+        if items_to_create:
+            m.OrderItem.objects.bulk_create(items_to_create)
         order.total = order.calculate_total()
         order.save()
         return order
+
     
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -204,38 +215,62 @@ class OrderSerializer(serializers.ModelSerializer):
 class EconomicActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = m.EconomicActivity
-        fields = ['id', 'activity_id', 'activity_name']
+        fields = '__all__' 
 
 class ClientSerializer(serializers.ModelSerializer):
     economic_activity = serializers.StringRelatedField(source='economicActivity')
     class Meta:
         model = m.Client
-        fields = ['id', 'client_name', 'economic_activity','client_email','client_phone' ]
+        fields = '__all__' 
 
 class BusinessProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = m.BusinessProfile
-        fields = ['id', 'business_name','address','phone_number', 'certificate']
+        fields = '__all__' 
+
+class BillItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    class Meta:
+        model = m.BillItem
+        fields= ['id', 'product', 'quantity', 'price_at_sale']
+    
 
 class BillSerializer(serializers.ModelSerializer):
+    #Los datos Foreing son business_data,client,
+    business_id = serializers.PrimaryKeyRelatedField(queryset=m.BusinessProfile.objects.all(), source='business_data')
+    client_id = serializers.PrimaryKeyRelatedField(queryset=m.Client.objects.all(), source='client')
+    items = BillItemSerializer(many=True, write_only=True)
     class Meta:
-        model = m.BusinessProfile
+        model = m.Bill
+        fields = ['business_id', 'document_type', 'bill_number', 'date_time', 'client_id', 'type_of_pay', 'client_pay', 'change', 'e_billing_key', 'qr']
+        read_only_fields = ['date_time','bill_number', 'e_billing_key', 'qr']
 
-# class Bill(models.Model):
-#     business_data = models.ForeignKey(BusinessProfile, on_delete=models.PROTECT)
-#     document_type = models.CharField(max_length=50)
-#     bill_number = models.CharField(max_length=50, unique=True) # Un número de factura debe ser único
-#     date_time = models.DateTimeField(auto_now_add=True)
-#     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name='bills')
-    
-#     # Estos campos probablemente vendrán como un objeto JSON, CharField o TextField es mejor
-#     type_of_pay = models.CharField(max_length=255) 
-#     client_pay = models.DecimalField(max_digits=10, decimal_places=2)
-#     change = models.DecimalField(max_digits=10, decimal_places=2)
-    
-#     # Campos fiscales
-#     e_billing_key = models.CharField(max_length=50, unique=True, null=True, blank=True)
-#     qr = models.TextField(blank=True) # TextField es mejor para strings largos
-
-#     def __str__(self):
-#         return f"{self.document_type} - {self.bill_number}"
+    @transaction.atomic
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        bill = m.Bill.objects.create(**validated_data)
+        product_ids = [item['product_id'] for item in items_data]
+        products = m.Product.objects.filter(id__in=product_ids)
+        products_map = {product.id: product for product in products}
+        items_to_create = []
+        for item_data in items_data:
+            product = products_map.get(item_data['product_id'])
+            
+            # Si por alguna razón el producto no existe, lo ignoramos.
+            if not product:
+                continue
+            
+            quantity = item_data['quantity']
+            price = product.price
+            items_to_create.append(
+                m.BillItem(
+                    bill=bill,
+                    product_name=product.name,  # Copiamos los datos
+                    quantity=quantity,
+                    price_at_sale=price,      # Copiamos los datos
+                    line_total=price * quantity
+                )
+            )
+        if items_to_create:
+            m.BillItem.objects.bulk_create(items_to_create)
+        return bill
