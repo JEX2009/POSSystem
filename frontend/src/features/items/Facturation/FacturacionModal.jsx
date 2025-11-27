@@ -6,20 +6,21 @@ import CalculationsPanel from "./components/CalculationsPanel";
 import SplitBill from "./components/SplitBill";
 import useSplitBill from "./hook/useSplitBill";
 import useInvoice from "./hook/useInvoice";
+import ConfirmDialog from '../../../components/ConfirmDialog';
+import {useState } from "react";
+
 
 const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrderForBilling }) => {
     const { paymentMethods, paymentAmounts, facturarError, checkedState, isSplitViewOpen, setSplitViewOpen, money, handleCheckboxChange, handleAdd, handleFacturar, tipoDocumento, setTipoDocumento, handleAmountChange, setActivePaymentMethod, totalPagado } = useFacturation(isModalOpen, cart, onSuccess, closeOrderForBilling);
     const items = cart.items ? cart.items : cart.items_read;
-    const {invoiceModalOpen,closeInvoiceModal}=useInvoice(onSuccess);
+    const { invoiceModalOpen, closeInvoiceModal } = useInvoice(onSuccess);
     const { productosRestantes, productosDivididos, dividirProducto, devolverProducto, setProductosDivididos } = useSplitBill(items);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [formData, setFormData] = useState();
 
     const totalAPagar = !isSplitViewOpen ? cart.total : productosDivididos.reduce((suma, object) => suma + object.product.price * object.quantity, 0);
     const onProcessPayment = () => {
-        const esPagoValido = handleFacturar(totalAPagar);
-
-        if (!esPagoValido) {
-            return;
-        }
+        
 
         if (isSplitViewOpen) {
             if (productosRestantes.length < 1) {
@@ -32,6 +33,23 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
         }
 
     };
+
+    const onSubmit = (data) => {
+        const esPagoValido = handleFacturar(totalAPagar);
+
+        if (!esPagoValido) {
+            return;
+        }
+        setFormData(data);
+        setIsConfirmOpen(true);
+    }
+
+    const errorData = () => {
+        setFormData();
+        reset();
+        setIsConfirmOpen(false);
+        closeModal();
+    }
 
 
     return (
@@ -77,7 +95,7 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
                                     money={money}
                                     handleAdd={handleAdd}
                                     totalPagado={totalPagado}
-                                    onProcessPayment={onProcessPayment}
+                                    onProcessPayment={onSubmit}
                                 />
                             </div>
                         </div>
@@ -92,6 +110,14 @@ const FacturacionModal = ({ isModalOpen, closeModal, cart, onSuccess, closeOrder
                     </div>
                 </div>
             </div>
+            <PopUp closeModal={() => setIsConfirmOpen(false)} isModalOpen={isConfirmOpen}>
+                <ConfirmDialog
+                    message="¿Estás seguro que deseas facturar?"
+                    yesOption={onProcessPayment}
+                    noOption={errorData}
+                />
+                {/* {hasError && (<ErrorMessage message=" Se ha encontrado un error creando el producto." />)} */}
+            </PopUp>
         </PopUp>
 
 

@@ -5,7 +5,6 @@ export const createProducts = async (product) =>{
         const response = await apiClient.post('/product/',product);
         return response.data;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 }
