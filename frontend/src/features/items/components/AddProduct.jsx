@@ -3,12 +3,17 @@ import { useForm } from 'react-hook-form';
 import { createProducts } from "../../../services/api/apiProduct";
 import { featchCategory } from "../../../services/api/apiCategory";
 import { useEffect, useState } from "react";
+import ConfirmDialog from '../../../components/ConfirmDialog';
+import ErrorMessage from "../../../components/ErrorMessage";
 
 const AddProduct = (props) => {
     const { isModalOpen, closeModal, onSuccess } = props;
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors }, reset } = useForm();
     const [categories, setCategories] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [formData, setFormData] = useState();
+    const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
         if (isModalOpen) {
@@ -24,17 +29,29 @@ const AddProduct = (props) => {
         }
     }, [isModalOpen]);
 
-    const onSubmit = async (data) => {
-        setIsSubmitting(true); // Bloqueamos el botón
+    const onSubmit = (data) => {
+        setFormData(data);
+        setIsConfirmOpen(true);
+    }
+
+    const saveProduct = async () => {
+        setIsSubmitting(true);
         try {
-            await createProducts(data);
-            onSuccess(); // Llamamos a la función para refrescar la lista de productos
-            closeModal(); // Cerramos el modal
+            await createProducts(formData);
+            onSuccess();
+            closeModal();
         } catch (err) {
-            console.error("Error al crear el producto:", err);
+            setHasError(err);
         } finally {
-            setIsSubmitting(false); // Desbloqueamos el botón
+            setIsSubmitting(false);
         }
+    }
+
+    const errorData = () => {
+        setFormData();
+        reset();
+        setIsConfirmOpen(false);
+        closeModal();
     }
 
     return (
@@ -63,7 +80,7 @@ const AddProduct = (props) => {
                             id="category_id"
                             {...register("category_id", {
                                 required: "La categoría es obligatoria",
-                                valueAsNumber: true 
+                                valueAsNumber: true
                             })}
                             className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.category_id ? 'border-red-500' : 'border-gray-300'}`}
                         >
@@ -101,7 +118,16 @@ const AddProduct = (props) => {
                     </button>
                 </form>
             </div>
+            <PopUp closeModal={() => setIsConfirmOpen(false)} isModalOpen={isConfirmOpen}>
+                <ConfirmDialog
+                    message="¿Estás seguro de que deseas agregar este producto?"
+                    yesOption={saveProduct}
+                    noOption={errorData}
+                />
+                {hasError && (<ErrorMessage message=" Se ha encontrado un error creando el producto." />)}
+            </PopUp>
         </PopUp>
+
     );
 }
 

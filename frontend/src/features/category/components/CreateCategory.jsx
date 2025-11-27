@@ -2,7 +2,6 @@
 const CreateCategory = (props) => {
     const { onSubmit, isCreating, createError, succes, register, errors, handleSubmit } = props;
 
-
     return (
         <>
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -22,6 +21,7 @@ const CreateCategory = (props) => {
             </form>
             {createError && <p className="text-red-500 mt-4 text-center">{createError}</p>}
             {succes && <p className="text-green-500 mt-4 text-center">{succes}</p>}
+            
         </>
     )
 }
